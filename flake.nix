@@ -15,8 +15,8 @@
         in
         rec {
           packages = flake-utils.lib.flattenTree rec {
-            cider = pkgs.appimageTools.wrapType2 rec {
-              name = "Cider";
+            default = pkgs.appimageTools.wrapType2 rec {
+              name = "cider";
               version = "1.6.1";
               src = pkgs.fetchurl {
                 url = "https://github.com/ciderapp/Cider/releases/download/v${version}/Cider-${version}.AppImage";
@@ -24,7 +24,6 @@
               };
             };
           };
-          defaultPackage = packages.cider;
         }
       );
 }
