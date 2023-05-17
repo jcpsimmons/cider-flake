@@ -2,25 +2,29 @@
   description = "A very basic flake";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.05";
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs }: {
-    packages.x86_64-linux.default = with import nixpkgs { system = "x86_64-linux"; };
-      with (import ./build-appimage.nix { inherit pkgs; });
-      let
-        version = "0.6.6";
-      in
-      buildAppImage {
-        name = "Cider";
-        url = "https://github.com/ciderapp/Cider/releases/download/v1.6.1/Cider-1.6.1.AppImage";
-        sha256 = "sha256-OzHFH0CTcHyeP6zNReM4hOYNa1W79It2VaZk7wGIDpc=";
-        icon = fetchurl {
-          url = https://raw.githubusercontent.com/ciderapp/Cider/5071426b4787c583fa3a0bbf68ba6ba867f243a3/Assets/Vinyl%20Logo/cider-vinyl%20no%20raster.svg;
-          sha256 = "943efe7ac98ad14519e9c0ce57fbda1f5f5b9720169ae0288ca78c96559ab010";
-        };
-        categories = "Streaming Music";
-      };
 
-  };
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachSystem [ flake-utils.lib.system.x86_64-linux ]
+      (system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        rec {
+          packages = flake-utils.lib.flattenTree rec {
+            cider = pkgs.appimageTools.wrapType2 rec {
+              name = "Cider";
+              version = "1.6.1";
+              src = pkgs.fetchurl {
+                url = "https://github.com/ciderapp/Cider/releases/download/v${version}/Cider-${version}.AppImage";
+                sha256 = "sha256-gAx2gzfKrERZJwyMx7zg0YhaJb91qRoRUMiojEMn6xE=";
+              };
+            };
+          };
+          defaultPackage = packages.cider;
+        }
+      );
 }
